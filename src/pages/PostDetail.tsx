@@ -3,9 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import BottomNav from '@/components/BottomNav';
-import { usePosts } from '@/lib/store';
+import SendMessageDialog from '@/components/SendMessageDialog';
+import { usePosts, useMessages } from '@/lib/store';
 import { getDeviceId, getNickname } from '@/lib/nickname';
+import { getProfileBadge } from '@/lib/profile';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
@@ -15,8 +18,11 @@ export default function PostDetail() {
   const deviceId = getDeviceId();
   const nickname = getNickname();
   const { getPost, addComment } = usePosts();
+  const { sendMessage } = useMessages();
   const [commentText, setCommentText] = useState('');
+  const [messageTarget, setMessageTarget] = useState<{ deviceId: string; nickname: string; postId: string } | null>(null);
   const post = getPost(id || '');
+  const badge = getProfileBadge();
 
   if (!post) {
     return (
@@ -30,6 +36,11 @@ export default function PostDetail() {
     if (!commentText.trim()) return;
     addComment(post.id, { deviceId, nickname, content: commentText.trim() });
     setCommentText('');
+  };
+
+  const openMessage = (targetDeviceId: string, targetNickname: string) => {
+    if (targetDeviceId === deviceId) return;
+    setMessageTarget({ deviceId: targetDeviceId, nickname: targetNickname, postId: post.id });
   };
 
   return (
@@ -49,12 +60,28 @@ export default function PostDetail() {
             <div className="w-8 h-8 rounded-full mint-gradient flex items-center justify-center text-primary-foreground text-xs font-bold">
               {post.nickname.charAt(0)}
             </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">{post.nickname}</p>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <p className="text-sm font-semibold text-foreground">{post.nickname}</p>
+                {post.deviceId === deviceId && badge && (
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-normal">
+                    {badge.value}
+                  </Badge>
+                )}
+              </div>
               <p className="text-[11px] text-muted-foreground">
                 {formatDistanceToNow(post.createdAt, { addSuffix: true, locale: ko })}
               </p>
             </div>
+            {post.deviceId !== deviceId && (
+              <button
+                onClick={() => openMessage(post.deviceId, post.nickname)}
+                className="p-2 rounded-lg bg-accent text-accent-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
+                title="쪽지 보내기"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            )}
           </div>
           <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{post.content}</p>
           {post.imageUrl && (
@@ -77,6 +104,16 @@ export default function PostDetail() {
                 <span className="text-[10px] text-muted-foreground">
                   {formatDistanceToNow(c.createdAt, { addSuffix: true, locale: ko })}
                 </span>
+                <div className="flex-1" />
+                {c.deviceId !== deviceId && (
+                  <button
+                    onClick={() => openMessage(c.deviceId, c.nickname)}
+                    className="p-1 rounded text-muted-foreground hover:text-primary transition-colors"
+                    title="쪽지 보내기"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
               <p className="text-sm text-foreground ml-8">{c.content}</p>
             </div>
@@ -99,6 +136,25 @@ export default function PostDetail() {
           </Button>
         </div>
       </div>
+
+      {messageTarget && (
+        <SendMessageDialog
+          open={!!messageTarget}
+          onClose={() => setMessageTarget(null)}
+          toNickname={messageTarget.nickname}
+          onSubmit={(content) => {
+            sendMessage({
+              fromDeviceId: deviceId,
+              fromNickname: nickname,
+              toDeviceId: messageTarget.deviceId,
+              toNickname: messageTarget.nickname,
+              postId: messageTarget.postId,
+              content,
+            });
+            setMessageTarget(null);
+          }}
+        />
+      )}
 
       <BottomNav />
     </div>

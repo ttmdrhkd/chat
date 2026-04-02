@@ -2,15 +2,18 @@ import { MessageSquare, Send } from 'lucide-react';
 import type { Post } from '@/lib/store';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { Badge } from '@/components/ui/badge';
+import { getProfileBadge } from '@/lib/profile';
 
 interface PostCardProps {
   post: Post;
   onClick?: () => void;
   onMessage?: () => void;
   isMine?: boolean;
+  badge?: { label: string; value: string } | null;
 }
 
-export default function PostCard({ post, onClick, onMessage, isMine }: PostCardProps) {
+export default function PostCard({ post, onClick, onMessage, isMine, badge }: PostCardProps) {
   return (
     <article
       className="bg-card rounded-xl p-4 card-shadow hover:card-shadow-hover transition-shadow cursor-pointer border border-border"
@@ -21,7 +24,14 @@ export default function PostCard({ post, onClick, onMessage, isMine }: PostCardP
           {post.nickname.charAt(0)}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground truncate">{post.nickname}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-sm font-semibold text-foreground truncate">{post.nickname}</p>
+            {badge && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-normal">
+                {badge.value}
+              </Badge>
+            )}
+          </div>
           <p className="text-[11px] text-muted-foreground">
             {formatDistanceToNow(post.createdAt, { addSuffix: true, locale: ko })}
           </p>

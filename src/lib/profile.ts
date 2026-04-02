@@ -3,6 +3,8 @@ export interface UserProfile {
   region: string;
   mbti: string;
   tendency: string;
+  displayBadge: 'mbti' | 'tendency' | 'none';
+  photos: string[]; // URLs from storage
 }
 
 const PROFILE_KEY = 'anon_profile';
@@ -20,22 +22,46 @@ const MBTI_TYPES = [
 ];
 
 const TENDENCIES = [
-  '집돌이/집순이', '활동적', '감성적', '이성적', '유머러스',
-  '조용한 편', '사교적', '모험적', '낭만적', '현실적',
+  'Dom', 'Sub', 'Switch',
+  'Vanilla', 'Sadist', 'Masochist',
+  'Daddy/Mommy', 'Brat', 'Brat Tamer',
+  'Bi', 'Gay', 'Lesbian', 'Straight',
+  'Curious',
 ];
 
 export function getProfile(): UserProfile {
   const saved = localStorage.getItem(PROFILE_KEY);
   if (saved) {
-    try { return JSON.parse(saved); } catch {}
+    try {
+      const parsed = JSON.parse(saved);
+      return {
+        nickname: parsed.nickname || '',
+        region: parsed.region || '',
+        mbti: parsed.mbti || '',
+        tendency: parsed.tendency || '',
+        displayBadge: parsed.displayBadge || 'none',
+        photos: parsed.photos || [],
+      };
+    } catch {}
   }
   const nickname = localStorage.getItem('anon_nickname') || '';
-  return { nickname, region: '', mbti: '', tendency: '' };
+  return { nickname, region: '', mbti: '', tendency: '', displayBadge: 'none', photos: [] };
 }
 
 export function saveProfile(profile: UserProfile) {
   localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
   localStorage.setItem('anon_nickname', profile.nickname);
+}
+
+export function getProfileBadge(): { label: string; value: string } | null {
+  const profile = getProfile();
+  if (profile.displayBadge === 'mbti' && profile.mbti) {
+    return { label: 'MBTI', value: profile.mbti };
+  }
+  if (profile.displayBadge === 'tendency' && profile.tendency) {
+    return { label: '성향', value: profile.tendency };
+  }
+  return null;
 }
 
 export { REGIONS, MBTI_TYPES, TENDENCIES };

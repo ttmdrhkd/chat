@@ -8,6 +8,7 @@ import WritePostDialog from '@/components/WritePostDialog';
 import SendMessageDialog from '@/components/SendMessageDialog';
 import { usePosts, useMessages } from '@/lib/store';
 import { getDeviceId, getNickname } from '@/lib/nickname';
+import { getProfileBadge } from '@/lib/profile';
 
 export default function Index() {
   const navigate = useNavigate();
@@ -18,9 +19,10 @@ export default function Index() {
   const [showWrite, setShowWrite] = useState(false);
   const [messageTarget, setMessageTarget] = useState<{ deviceId: string; nickname: string; postId: string } | null>(null);
 
+  const badge = getProfileBadge();
+
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
       <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border">
         <div className="max-w-lg mx-auto flex items-center justify-between px-4 h-14">
           <h1 className="text-lg font-bold text-foreground">피드</h1>
@@ -31,7 +33,6 @@ export default function Index() {
         </div>
       </header>
 
-      {/* Feed */}
       <main className="max-w-lg mx-auto px-4 py-4 space-y-3">
         {posts.length === 0 && (
           <div className="text-center py-20">
@@ -46,6 +47,7 @@ export default function Index() {
             isMine={post.deviceId === deviceId}
             onClick={() => navigate(`/post/${post.id}`)}
             onMessage={() => setMessageTarget({ deviceId: post.deviceId, nickname: post.nickname, postId: post.id })}
+            badge={post.deviceId === deviceId ? badge : null}
           />
         ))}
       </main>

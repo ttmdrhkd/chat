@@ -1,5 +1,5 @@
-import { RefreshCw, Save, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { RefreshCw, Save, Plus, X, Camera } from 'lucide-react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,11 +8,17 @@ import { getDeviceId, generateNickname } from '@/lib/nickname';
 import { getDailyMessageInfo } from '@/lib/store';
 import { getProfile, saveProfile, REGIONS, MBTI_TYPES, TENDENCIES } from '@/lib/profile';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+const MAX_PHOTOS = 3;
 
 export default function Profile() {
   const deviceId = getDeviceId();
   const [profile, setProfile] = useState(getProfile);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const msgInfo = getDailyMessageInfo();
 
   const update = (field: string, value: string) => {
@@ -22,6 +28,38 @@ export default function Profile() {
   const regenerateNickname = () => {
     const newName = generateNickname();
     update('nickname', newName);
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    if (profile.photos.length >= MAX_PHOTOS) {
+      toast.error(`사진은 최대 ${MAX_PHOTOS}장까지 가능합니다.`);
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const file = files[0];
+      const ext = file.name.split('.').pop();
+      const path = `${deviceId}/${crypto.randomUUID()}.${ext}`;
+
+      const { error } = await supabase.storage.from('profile-photos').upload(path, file);
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage.from('profile-photos').getPublicUrl(path);
+      setProfile(prev => ({ ...prev, photos: [...prev.photos, urlData.publicUrl] }));
+      toast.success('사진이 업로드되었습니다.');
+    } catch (err: any) {
+      toast.error('업로드 실패: ' + (err.message || '알 수 없는 오류'));
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    setProfile(prev => ({ ...prev, photos: prev.photos.filter((_, i) => i !== index) }));
   };
 
   const handleSave = () => {
@@ -46,12 +84,46 @@ export default function Profile() {
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
-        {/* Avatar */}
-        <div className="flex flex-col items-center gap-2">
-          <div className="w-20 h-20 rounded-full mint-gradient flex items-center justify-center text-primary-foreground text-2xl font-bold">
-            {profile.nickname.charAt(0) || '?'}
+        {/* Photos */}
+        <div className="bg-card rounded-xl p-4 border border-border space-y-3">
+          <h2 className="text-sm font-semibold text-foreground">프로필 사진 (최대 {MAX_PHOTOS}장)</h2>
+          <div className="flex gap-3 flex-wrap">
+            {profile.photos.map((url, i) => (
+              <div key={i} className="relative w-24 h-24 rounded-lg overflow-hidden border border-border">
+                <img src={url} alt={`프로필 ${i + 1}`} className="w-full h-full object-cover" />
+                <button
+                  onClick={() => removePhoto(i)}
+                  className="absolute top-1 right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+            {profile.photos.length < MAX_PHOTOS && (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="w-24 h-24 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+              >
+                {uploading ? (
+                  <span className="text-xs">업로드중...</span>
+                ) : (
+                  <>
+                    <Camera className="w-5 h-5" />
+                    <span className="text-[10px]">추가</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
-          <p className="text-xs text-muted-foreground">익명 사용자</p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handlePhotoUpload}
+            className="hidden"
+          />
+          <p className="text-[10px] text-muted-foreground">* 프로필 사진은 피드에 표시되지 않습니다.</p>
         </div>
 
         {/* Profile fields */}
@@ -119,6 +191,30 @@ export default function Profile() {
               </SelectContent>
             </Select>
           </div>
+        </div>
+
+        {/* Display badge choice */}
+        <div className="bg-card rounded-xl p-4 border border-border space-y-3">
+          <h2 className="text-sm font-semibold text-foreground">피드에 표시할 정보</h2>
+          <p className="text-xs text-muted-foreground">게시글/댓글에 닉네임 옆에 표시됩니다.</p>
+          <RadioGroup
+            value={profile.displayBadge}
+            onValueChange={v => update('displayBadge', v)}
+            className="space-y-2"
+          >
+            <label className="flex items-center gap-2 cursor-pointer">
+              <RadioGroupItem value="none" />
+              <span className="text-sm text-foreground">표시 안함</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <RadioGroupItem value="mbti" />
+              <span className="text-sm text-foreground">MBTI {profile.mbti && `(${profile.mbti})`}</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <RadioGroupItem value="tendency" />
+              <span className="text-sm text-foreground">성향 {profile.tendency && `(${profile.tendency})`}</span>
+            </label>
+          </RadioGroup>
         </div>
 
         {/* Stats */}
