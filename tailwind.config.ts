@@ -13,6 +13,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['"Noto Sans KR"', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -46,6 +49,10 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        mint: {
+          light: "hsl(var(--mint-light))",
+          glow: "hsl(var(--mint-glow))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
