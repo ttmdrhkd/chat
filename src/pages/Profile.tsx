@@ -200,7 +200,7 @@ export default function Profile() {
         {/* Display badge choice */}
         <div className="bg-card rounded-xl p-4 border border-border space-y-3">
           <h2 className="text-sm font-semibold text-foreground">피드에 표시할 정보</h2>
-          <p className="text-xs text-muted-foreground">게시글/댓글에 닉네임 옆에 표시됩니다.</p>
+          <p className="text-xs text-muted-foreground"><p className="text-xs text-muted-foreground">게시글/댓글에 아이디 옆에 표시됩니다.</p></p>
           <RadioGroup
             value={profile.displayBadge}
             onValueChange={v => update('displayBadge', v)}
