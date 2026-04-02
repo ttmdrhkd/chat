@@ -22,11 +22,11 @@ const MBTI_TYPES = [
 ];
 
 const TENDENCIES = [
-  'Dom', 'Sub', 'Switch',
-  'Vanilla', 'Sadist', 'Masochist',
-  'Daddy/Mommy', 'Brat', 'Brat Tamer',
-  'Bi', 'Gay', 'Lesbian', 'Straight',
-  'Curious',
+  '없음', '도미넌트', '서브미시브', '스위치',
+  '새디스트', '마조히스트',
+  '대디/마미', '브랫', '브랫테이머',
+  '바이', '게이', '레즈비언', '스트레이트',
+  '궁금해요',
 ];
 
 export function getProfile(): UserProfile {
