@@ -180,7 +180,10 @@ export default function Profile() {
 
           {/* Tendency */}
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">성향</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs text-muted-foreground">성향</Label>
+              <TendencyQuiz onResult={(t) => update('tendency', t)} />
+            </div>
             <Select value={profile.tendency} onValueChange={v => update('tendency', v)}>
               <SelectTrigger className="text-sm">
                 <SelectValue placeholder="성향을 선택하세요" />
