@@ -1,5 +1,6 @@
 import { RefreshCw, Save, Plus, X, Camera } from 'lucide-react';
 import { useState, useRef } from 'react';
+import TendencyQuiz from '@/components/TendencyQuiz';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
