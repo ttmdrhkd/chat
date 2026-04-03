@@ -9,6 +9,7 @@ import SendMessageDialog from '@/components/SendMessageDialog';
 import { usePosts, useMessages } from '@/lib/store';
 import { getDeviceId, getNickname } from '@/lib/nickname';
 import { getProfileBadge } from '@/lib/profile';
+import ReelsBar from '@/components/ReelsBar';
 
 export default function Index() {
   const navigate = useNavigate();
