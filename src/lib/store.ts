@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { getDeviceId, getNickname } from '@/lib/nickname';
 
 export interface Post {
   id: string;
