@@ -9,6 +9,7 @@ import SendMessageDialog from '@/components/SendMessageDialog';
 import { usePosts, useMessages } from '@/lib/store';
 import { getDeviceId, getNickname } from '@/lib/nickname';
 import { getProfileBadge } from '@/lib/profile';
+import ReelsBar from '@/components/ReelsBar';
 
 export default function Index() {
   const navigate = useNavigate();
@@ -32,6 +33,10 @@ export default function Index() {
           </Button>
         </div>
       </header>
+
+      <div className="max-w-lg mx-auto border-b border-border">
+        <ReelsBar />
+      </div>
 
       <main className="max-w-lg mx-auto px-4 py-4 space-y-3">
         {posts.length === 0 && (
