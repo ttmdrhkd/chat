@@ -247,6 +247,7 @@ export function usePosts() {
 }
 
 export function useMessages() {
+  seedDemo();
   const [, setUpdate] = useState(0);
   const refresh = useCallback(() => setUpdate(v => v + 1), []);
 
