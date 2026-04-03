@@ -1,4 +1,5 @@
 import { Bell, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import BottomNav from '@/components/BottomNav';
 import { useNotifications } from '@/lib/store';
@@ -7,9 +8,21 @@ import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
 export default function Notifications() {
+  const navigate = useNavigate();
   const deviceId = getDeviceId();
   const { getUserNotifications, markRead, markAllRead } = useNotifications();
   const list = getUserNotifications(deviceId);
+
+  const handleClick = (n: typeof list[0]) => {
+    markRead(n.id);
+    if (n.type === 'comment' && n.relatedId) {
+      navigate(`/post/${n.relatedId}`);
+    } else if (n.type === 'message_request' && n.relatedId) {
+      navigate('/messages');
+    } else if (n.type === 'message_accepted' && n.relatedId) {
+      navigate(`/chat/${n.relatedId}`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -34,7 +47,7 @@ export default function Notifications() {
         {list.map(n => (
           <div
             key={n.id}
-            onClick={() => markRead(n.id)}
+            onClick={() => handleClick(n)}
             className={`rounded-xl p-4 border cursor-pointer transition-colors ${
               n.read ? 'bg-card border-border' : 'bg-accent border-primary/20'
             }`}
