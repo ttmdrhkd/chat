@@ -209,6 +209,7 @@ export function markAdWatched() {
 }
 
 export function usePosts() {
+  seedDemo();
   const [, setUpdate] = useState(0);
   const refresh = useCallback(() => setUpdate(v => v + 1), []);
 
