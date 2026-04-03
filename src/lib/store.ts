@@ -313,6 +313,7 @@ export function useMessages() {
 }
 
 export function useChatRooms() {
+  seedDemo();
   const [, setUpdate] = useState(0);
   const refresh = useCallback(() => setUpdate(v => v + 1), []);
 
