@@ -34,6 +34,10 @@ export default function Index() {
         </div>
       </header>
 
+      <div className="max-w-lg mx-auto border-b border-border">
+        <ReelsBar />
+      </div>
+
       <main className="max-w-lg mx-auto px-4 py-4 space-y-3">
         {posts.length === 0 && (
           <div className="text-center py-20">
