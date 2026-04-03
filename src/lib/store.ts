@@ -62,76 +62,122 @@ export interface Notification {
 }
 
 // In-memory store for demo (will be replaced with Supabase)
-const DEMO_DEVICE_A = 'demo-user-aaa';
-const DEMO_DEVICE_B = 'demo-user-bbb';
+const DEMO_OTHER = 'demo-user-other';
+const DEMO_OTHER_NICK = '신비한 고양이';
 
 const now = new Date();
 const ago = (min: number) => new Date(now.getTime() - min * 60000);
 
-let posts: Post[] = [
-  {
-    id: 'demo-post-1',
-    deviceId: DEMO_DEVICE_A,
-    nickname: '수줍은 여우',
-    content: '오늘 처음 가입했는데 다들 반가워요 😊\n취미가 비슷한 분 있으면 이야기 나눠봐요~',
-    createdAt: ago(30),
-    comments: [
-      { id: 'demo-c1', postId: 'demo-post-1', deviceId: DEMO_DEVICE_B, nickname: '용감한 펭귄', content: '반가워요! 저도 오늘 가입했어요 ㅎㅎ', createdAt: ago(25) },
-    ],
-  },
-  {
-    id: 'demo-post-2',
-    deviceId: DEMO_DEVICE_B,
-    nickname: '용감한 펭귄',
-    content: '주말에 같이 이야기할 사람 구해요~\n편하게 연락 주세요 :)',
-    createdAt: ago(15),
-    comments: [],
-  },
-  {
-    id: 'demo-post-3',
-    deviceId: DEMO_DEVICE_A,
-    nickname: '수줍은 여우',
-    content: '성향 검사 해봤는데 스위치래요 ㅋㅋ 다들 해보세요!',
-    createdAt: ago(5),
-    comments: [
-      { id: 'demo-c2', postId: 'demo-post-3', deviceId: DEMO_DEVICE_B, nickname: '용감한 펭귄', content: '저도 해봐야겠다!', createdAt: ago(3) },
-    ],
-  },
-];
-
-const demoMsgId = 'demo-msg-1';
-const demoChatRoomId = 'demo-chat-1';
-
-let messages: Message[] = [
-  {
-    id: demoMsgId,
-    fromDeviceId: DEMO_DEVICE_A,
-    fromNickname: '수줍은 여우',
-    toDeviceId: DEMO_DEVICE_B,
-    toNickname: '용감한 펭귄',
-    postId: 'demo-post-2',
-    content: '안녕하세요! 이야기 나눠보고 싶어서 쪽지 보내요 😊',
-    status: 'accepted',
-    createdAt: ago(10),
-  },
-];
-
-let chatRooms: ChatRoom[] = [
-  {
-    id: demoChatRoomId,
-    messageId: demoMsgId,
-    participants: [DEMO_DEVICE_A, DEMO_DEVICE_B],
-    nicknames: ['수줍은 여우', '용감한 펭귄'],
-    messages: [
-      { id: 'demo-chat-msg-1', roomId: demoChatRoomId, deviceId: DEMO_DEVICE_A, nickname: '수줍은 여우', content: '쪽지 수락해줘서 고마워요!', createdAt: ago(8) },
-      { id: 'demo-chat-msg-2', roomId: demoChatRoomId, deviceId: DEMO_DEVICE_B, nickname: '용감한 펭귄', content: '반가워요~ 편하게 말해요 ㅎㅎ', createdAt: ago(7) },
-      { id: 'demo-chat-msg-3', roomId: demoChatRoomId, deviceId: DEMO_DEVICE_A, nickname: '수줍은 여우', content: '주말에 뭐 하세요?', createdAt: ago(5) },
-    ],
-    createdAt: ago(9),
-  },
-];
-
+let posts: Post[] = [];
+let messages: Message[] = [];
+let chatRooms: ChatRoom[] = [];
 let notifications: Notification[] = [];
+let demoSeeded = false;
+
+function seedDemo() {
+  if (demoSeeded) return;
+  demoSeeded = true;
+
+  const myId = getDeviceId();
+  const myNick = getNickname();
+
+  const demoMsgId = 'demo-msg-1';
+  const demoChatRoomId = 'demo-chat-1';
+
+  posts = [
+    {
+      id: 'demo-post-1',
+      deviceId: DEMO_OTHER,
+      nickname: DEMO_OTHER_NICK,
+      content: '오늘 처음 가입했는데 다들 반가워요 😊\n취미가 비슷한 분 있으면 이야기 나눠봐요~',
+      createdAt: ago(30),
+      comments: [
+        { id: 'demo-c1', postId: 'demo-post-1', deviceId: myId, nickname: myNick, content: '반가워요! 저도 오늘 가입했어요 ㅎㅎ', createdAt: ago(25) },
+      ],
+    },
+    {
+      id: 'demo-post-2',
+      deviceId: DEMO_OTHER,
+      nickname: DEMO_OTHER_NICK,
+      content: '주말에 같이 이야기할 사람 구해요~\n편하게 연락 주세요 :)',
+      createdAt: ago(15),
+      comments: [],
+    },
+    {
+      id: 'demo-post-3',
+      deviceId: myId,
+      nickname: myNick,
+      content: '성향 검사 해봤는데 스위치래요 ㅋㅋ 다들 해보세요!',
+      createdAt: ago(5),
+      comments: [
+        { id: 'demo-c2', postId: 'demo-post-3', deviceId: DEMO_OTHER, nickname: DEMO_OTHER_NICK, content: '저도 해봐야겠다!', createdAt: ago(3) },
+      ],
+    },
+  ];
+
+  messages = [
+    {
+      id: demoMsgId,
+      fromDeviceId: DEMO_OTHER,
+      fromNickname: DEMO_OTHER_NICK,
+      toDeviceId: myId,
+      toNickname: myNick,
+      postId: 'demo-post-3',
+      content: '안녕하세요! 이야기 나눠보고 싶어서 쪽지 보내요 😊',
+      status: 'accepted',
+      createdAt: ago(10),
+    },
+    {
+      id: 'demo-msg-2',
+      fromDeviceId: 'demo-user-zzz',
+      fromNickname: '활발한 다람쥐',
+      toDeviceId: myId,
+      toNickname: myNick,
+      postId: 'demo-post-3',
+      content: '혹시 대화 가능하신가요?',
+      status: 'pending',
+      createdAt: ago(2),
+    },
+  ];
+
+  chatRooms = [
+    {
+      id: demoChatRoomId,
+      messageId: demoMsgId,
+      participants: [DEMO_OTHER, myId],
+      nicknames: [DEMO_OTHER_NICK, myNick],
+      messages: [
+        { id: 'demo-chat-msg-1', roomId: demoChatRoomId, deviceId: DEMO_OTHER, nickname: DEMO_OTHER_NICK, content: '쪽지 수락해줘서 고마워요!', createdAt: ago(8) },
+        { id: 'demo-chat-msg-2', roomId: demoChatRoomId, deviceId: myId, nickname: myNick, content: '반가워요~ 편하게 말해요 ㅎㅎ', createdAt: ago(7) },
+        { id: 'demo-chat-msg-3', roomId: demoChatRoomId, deviceId: DEMO_OTHER, nickname: DEMO_OTHER_NICK, content: '주말에 뭐 하세요?', createdAt: ago(5) },
+      ],
+      createdAt: ago(9),
+    },
+  ];
+
+  notifications = [
+    {
+      id: 'demo-notif-1',
+      deviceId: myId,
+      type: 'message_request',
+      title: '새 쪽지 요청',
+      body: '활발한 다람쥐님이 쪽지를 보냈습니다.',
+      read: false,
+      createdAt: ago(2),
+      relatedId: 'demo-msg-2',
+    },
+    {
+      id: 'demo-notif-2',
+      deviceId: myId,
+      type: 'comment',
+      title: '새 댓글',
+      body: `${DEMO_OTHER_NICK}님이 댓글을 남겼습니다.`,
+      read: false,
+      createdAt: ago(3),
+      relatedId: 'demo-post-3',
+    },
+  ];
+}
 
 // Daily message limit
 const MESSAGE_LIMIT_KEY = 'daily_message_count';
