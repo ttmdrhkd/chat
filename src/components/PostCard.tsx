@@ -1,9 +1,10 @@
 import { MessageSquare, Send } from 'lucide-react';
-import type { Post } from '@/lib/store';
+import type { Post } from '@/lib/supabase-store';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
-import { getProfileBadge } from '@/lib/profile';
+import ReportBlockMenu from '@/components/ReportBlockMenu';
+import { getDeviceId } from '@/lib/nickname';
 
 interface PostCardProps {
   post: Post;
@@ -14,6 +15,8 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post, onClick, onMessage, isMine, badge }: PostCardProps) {
+  const deviceId = getDeviceId();
+
   return (
     <article
       className="bg-card rounded-xl p-4 card-shadow hover:card-shadow-hover transition-shadow cursor-pointer border border-border"
@@ -36,15 +39,25 @@ export default function PostCard({ post, onClick, onMessage, isMine, badge }: Po
             {formatDistanceToNow(post.createdAt, { addSuffix: true, locale: ko })}
           </p>
         </div>
-        {!isMine && onMessage && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onMessage(); }}
-            className="p-2 rounded-lg bg-accent text-accent-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-            title="쪽지 보내기"
-          >
-            <Send className="w-4 h-4" />
-          </button>
-        )}
+        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          {!isMine && onMessage && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onMessage(); }}
+              className="p-2 rounded-lg bg-accent text-accent-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
+              title="쪽지 보내기"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          )}
+          {!isMine && (
+            <ReportBlockMenu
+              targetDeviceId={post.deviceId}
+              targetNickname={post.nickname}
+              reportType="post"
+              relatedId={post.id}
+            />
+          )}
+        </div>
       </div>
 
       <p className="text-sm text-foreground leading-relaxed mb-3 whitespace-pre-wrap">{post.content}</p>

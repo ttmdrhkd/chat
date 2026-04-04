@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { getDailyMessageInfo, markAdWatched } from '@/lib/store';
+import { getDailyMessageInfo, markAdWatched } from '@/lib/supabase-store';
 import { AlertCircle, Play } from 'lucide-react';
 
 interface SendMessageDialogProps {
@@ -33,7 +33,6 @@ export default function SendMessageDialog({ open, onClose, onSubmit, toNickname 
   };
 
   const handleWatchAd = () => {
-    // Simulate watching an ad
     setTimeout(() => {
       markAdWatched();
       setShowAdPrompt(false);
@@ -46,17 +45,12 @@ export default function SendMessageDialog({ open, onClose, onSubmit, toNickname 
         <DialogContent className="max-w-sm mx-auto text-center">
           <DialogHeader>
             <DialogTitle>추가 쪽지 보내기</DialogTitle>
-            <DialogDescription>
-              오늘의 무료 쪽지를 모두 사용했습니다.
-            </DialogDescription>
+            <DialogDescription>오늘의 무료 쪽지를 모두 사용했습니다.</DialogDescription>
           </DialogHeader>
           <div className="py-6 space-y-4">
-            <p className="text-sm text-muted-foreground">
-              광고를 시청하면 쪽지를 1회 더 보낼 수 있습니다.
-            </p>
+            <p className="text-sm text-muted-foreground">광고를 시청하면 쪽지를 1회 더 보낼 수 있습니다.</p>
             <Button onClick={handleWatchAd} className="gap-2">
-              <Play className="w-4 h-4" />
-              광고 보기
+              <Play className="w-4 h-4" /> 광고 보기
             </Button>
           </div>
         </DialogContent>
@@ -66,7 +60,7 @@ export default function SendMessageDialog({ open, onClose, onSubmit, toNickname 
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-md mx-auto">
+      <DialogContent className="max-w-sm mx-auto">
         <DialogHeader>
           <DialogTitle>쪽지 보내기</DialogTitle>
           <DialogDescription>
@@ -88,9 +82,7 @@ export default function SendMessageDialog({ open, onClose, onSubmit, toNickname 
             maxLength={300}
           />
           <div className="flex justify-end">
-            <Button onClick={handleSubmit} disabled={!content.trim()}>
-              보내기
-            </Button>
+            <Button onClick={handleSubmit} disabled={!content.trim()}>보내기</Button>
           </div>
         </div>
       </DialogContent>

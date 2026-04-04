@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { useReels } from '@/lib/reels';
+import { useReels } from '@/lib/supabase-reels';
 import { getDeviceId, getNickname } from '@/lib/nickname';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import SendMessageDialog from '@/components/SendMessageDialog';
-import { useMessages } from '@/lib/store';
+import ReportBlockMenu from '@/components/ReportBlockMenu';
+import { useMessages } from '@/lib/supabase-store';
 
 export default function ReelsBar() {
   const deviceId = getDeviceId();
@@ -23,19 +24,16 @@ export default function ReelsBar() {
   const [viewingReel, setViewingReel] = useState<ReturnType<typeof getReel> | null>(null);
   const [commentText, setCommentText] = useState('');
   const [messageTarget, setMessageTarget] = useState<{ deviceId: string; nickname: string } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const createFileRef = useRef<HTMLInputElement>(null);
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>, forCreate: boolean) => {
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
       const url = reader.result as string;
-      if (forCreate) {
-        setImageUrl(url);
-        setImagePreview(url);
-      }
+      setImageUrl(url);
+      setImagePreview(url);
     };
     reader.readAsDataURL(file);
   };
@@ -49,12 +47,15 @@ export default function ReelsBar() {
     setShowCreate(false);
   };
 
-  const handleComment = () => {
+  const handleComment = async () => {
     if (!commentText.trim() || !viewingReel) return;
-    addReelComment(viewingReel.id, { deviceId, nickname, content: commentText.trim() });
+    await addReelComment(viewingReel.id, { deviceId, nickname, content: commentText.trim() });
     setCommentText('');
-    // refresh viewing reel
-    setViewingReel(getReel(viewingReel.id) || null);
+    // Refresh viewing reel
+    setTimeout(() => {
+      const r = getReel(viewingReel.id);
+      if (r) setViewingReel({ ...r });
+    }, 500);
   };
 
   const openReel = (reelId: string) => {
@@ -136,7 +137,7 @@ export default function ReelsBar() {
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={e => handleImageSelect(e, true)}
+            onChange={handleImageSelect}
           />
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
@@ -152,12 +153,11 @@ export default function ReelsBar() {
         </DialogContent>
       </Dialog>
 
-      {/* View reel dialog - no default close button */}
+      {/* View reel dialog */}
       <Dialog open={!!viewingReel} onOpenChange={() => setViewingReel(null)}>
         <DialogContent className="max-w-sm p-0 overflow-hidden [&>button.absolute]:hidden">
           {viewingReel && (
             <div className="bg-gradient-to-b from-primary/20 to-background min-h-[350px] flex flex-col">
-              {/* Header */}
               <div className="flex items-center justify-between p-4">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
@@ -172,13 +172,21 @@ export default function ReelsBar() {
                 </div>
                 <div className="flex items-center gap-1">
                   {viewingReel.deviceId !== deviceId && (
-                    <button
-                      onClick={() => setMessageTarget({ deviceId: viewingReel.deviceId, nickname: viewingReel.nickname })}
-                      className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                      title="쪽지 보내기"
-                    >
-                      <Send className="w-4 h-4" />
-                    </button>
+                    <>
+                      <button
+                        onClick={() => setMessageTarget({ deviceId: viewingReel.deviceId, nickname: viewingReel.nickname })}
+                        className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                        title="쪽지 보내기"
+                      >
+                        <Send className="w-4 h-4" />
+                      </button>
+                      <ReportBlockMenu
+                        targetDeviceId={viewingReel.deviceId}
+                        targetNickname={viewingReel.nickname}
+                        reportType="reel"
+                        relatedId={viewingReel.id}
+                      />
+                    </>
                   )}
                   <button onClick={() => setViewingReel(null)} className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
                     <X className="w-5 h-5" />
@@ -186,14 +194,12 @@ export default function ReelsBar() {
                 </div>
               </div>
 
-              {/* Image */}
               {viewingReel.imageUrl && (
                 <div className="px-4">
                   <img src={viewingReel.imageUrl} alt="" className="w-full max-h-48 object-cover rounded-lg" />
                 </div>
               )}
 
-              {/* Content */}
               {viewingReel.content && (
                 <div className="flex-1 flex items-center justify-center px-6 py-4">
                   <p className="text-base text-foreground text-center whitespace-pre-wrap leading-relaxed">
@@ -202,7 +208,6 @@ export default function ReelsBar() {
                 </div>
               )}
 
-              {/* Comments */}
               <div className="px-4 pb-2">
                 <div className="flex items-center gap-1 text-muted-foreground mb-2">
                   <MessageSquare className="w-3.5 h-3.5" />
@@ -237,7 +242,6 @@ export default function ReelsBar() {
                 </div>
               </div>
 
-              {/* Remaining time */}
               <div className="p-3 text-center border-t border-border">
                 <p className="text-[10px] text-muted-foreground">
                   남은 시간: {getRemainingTime(viewingReel)}
@@ -248,7 +252,6 @@ export default function ReelsBar() {
         </DialogContent>
       </Dialog>
 
-      {/* Send message dialog */}
       {messageTarget && (
         <SendMessageDialog
           open={!!messageTarget}

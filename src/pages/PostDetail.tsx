@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import BottomNav from '@/components/BottomNav';
 import SendMessageDialog from '@/components/SendMessageDialog';
-import { usePosts, useMessages } from '@/lib/store';
+import ReportBlockMenu from '@/components/ReportBlockMenu';
+import { usePosts, useMessages } from '@/lib/supabase-store';
 import { getDeviceId, getNickname } from '@/lib/nickname';
 import { getProfileBadge } from '@/lib/profile';
 import { formatDistanceToNow } from 'date-fns';
@@ -45,12 +46,20 @@ export default function PostDetail() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border">
+      <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border safe-top">
         <div className="max-w-lg mx-auto flex items-center gap-3 px-4 h-14">
           <button onClick={() => navigate(-1)} className="text-foreground">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-lg font-bold text-foreground">게시글</h1>
+          <h1 className="text-lg font-bold text-foreground flex-1">게시글</h1>
+          {post.deviceId !== deviceId && (
+            <ReportBlockMenu
+              targetDeviceId={post.deviceId}
+              targetNickname={post.nickname}
+              reportType="post"
+              relatedId={post.id}
+            />
+          )}
         </div>
       </header>
 
@@ -106,13 +115,21 @@ export default function PostDetail() {
                 </span>
                 <div className="flex-1" />
                 {c.deviceId !== deviceId && (
-                  <button
-                    onClick={() => openMessage(c.deviceId, c.nickname)}
-                    className="p-1 rounded text-muted-foreground hover:text-primary transition-colors"
-                    title="쪽지 보내기"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => openMessage(c.deviceId, c.nickname)}
+                      className="p-1 rounded text-muted-foreground hover:text-primary transition-colors"
+                      title="쪽지 보내기"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                    </button>
+                    <ReportBlockMenu
+                      targetDeviceId={c.deviceId}
+                      targetNickname={c.nickname}
+                      reportType="comment"
+                      relatedId={c.id}
+                    />
+                  </div>
                 )}
               </div>
               <p className="text-sm text-foreground ml-8">{c.content}</p>
@@ -123,7 +140,7 @@ export default function PostDetail() {
 
       {/* Comment input */}
       <div className="fixed bottom-16 left-0 right-0 bg-card border-t border-border z-40">
-        <div className="max-w-lg mx-auto flex items-center gap-2 px-4 py-2">
+        <div className="max-w-lg mx-auto flex items-center gap-2 px-4 py-2 safe-bottom">
           <Input
             placeholder="댓글을 입력하세요..."
             value={commentText}
