@@ -2,7 +2,7 @@ import { Bell, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import BottomNav from '@/components/BottomNav';
-import { useNotifications } from '@/lib/store';
+import { useNotifications } from '@/lib/supabase-store';
 import { getDeviceId } from '@/lib/nickname';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -26,7 +26,7 @@ export default function Notifications() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border">
+      <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border safe-top">
         <div className="max-w-lg mx-auto flex items-center justify-between px-4 h-14">
           <h1 className="text-lg font-bold text-foreground">알림</h1>
           {list.some(n => !n.read) && (

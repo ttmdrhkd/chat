@@ -6,7 +6,7 @@ import BottomNav from '@/components/BottomNav';
 import PostCard from '@/components/PostCard';
 import WritePostDialog from '@/components/WritePostDialog';
 import SendMessageDialog from '@/components/SendMessageDialog';
-import { usePosts, useMessages } from '@/lib/store';
+import { usePosts, useMessages } from '@/lib/supabase-store';
 import { getDeviceId, getNickname } from '@/lib/nickname';
 import { getProfileBadge } from '@/lib/profile';
 import ReelsBar from '@/components/ReelsBar';
@@ -24,7 +24,7 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border">
+      <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border safe-top">
         <div className="max-w-lg mx-auto flex items-center justify-between px-4 h-14">
           <h1 className="text-lg font-bold text-foreground">피드</h1>
           <Button size="sm" onClick={() => setShowWrite(true)} className="gap-1.5">

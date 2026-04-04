@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
-import { useChatRooms } from '@/lib/store';
+import { useChatRooms } from '@/lib/supabase-store';
 import { getDeviceId } from '@/lib/nickname';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -14,7 +14,7 @@ export default function Chats() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border">
+      <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border safe-top">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center">
           <h1 className="text-lg font-bold text-foreground">채팅</h1>
         </div>
@@ -39,11 +39,11 @@ export default function Chats() {
               className="w-full bg-card rounded-xl p-4 border border-border card-shadow hover:card-shadow-hover transition-shadow text-left flex items-center gap-3"
             >
               <div className="w-10 h-10 rounded-full mint-gradient flex items-center justify-center text-primary-foreground text-sm font-bold flex-shrink-0">
-                {otherNick.charAt(0)}
+                {otherNick?.charAt(0) || '?'}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-foreground">{otherNick}</span>
+                  <span className="text-sm font-semibold text-foreground">{otherNick || '알 수 없음'}</span>
                   <span className="text-[10px] text-muted-foreground">
                     {formatDistanceToNow(lastMsg?.createdAt || room.createdAt, { addSuffix: true, locale: ko })}
                   </span>

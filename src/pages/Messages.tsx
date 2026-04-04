@@ -2,8 +2,9 @@ import { ArrowLeft, Check, X, Inbox, Send as SendIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import BottomNav from '@/components/BottomNav';
+import ReportBlockMenu from '@/components/ReportBlockMenu';
 import { Button } from '@/components/ui/button';
-import { useMessages } from '@/lib/store';
+import { useMessages } from '@/lib/supabase-store';
 import { getDeviceId } from '@/lib/nickname';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -20,7 +21,7 @@ export default function Messages() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border">
+      <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border safe-top">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center">
           <h1 className="text-lg font-bold text-foreground">쪽지함</h1>
         </div>
@@ -61,9 +62,19 @@ export default function Messages() {
                   {tab === 'received' ? msg.fromNickname : msg.toNickname}
                 </span>
               </div>
-              <span className="text-[10px] text-muted-foreground">
-                {formatDistanceToNow(msg.createdAt, { addSuffix: true, locale: ko })}
-              </span>
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-muted-foreground">
+                  {formatDistanceToNow(msg.createdAt, { addSuffix: true, locale: ko })}
+                </span>
+                {tab === 'received' && (
+                  <ReportBlockMenu
+                    targetDeviceId={msg.fromDeviceId}
+                    targetNickname={msg.fromNickname}
+                    reportType="message"
+                    relatedId={msg.id}
+                  />
+                )}
+              </div>
             </div>
             <p className="text-sm text-foreground mb-3">{msg.content}</p>
             <div className="flex items-center justify-between">
@@ -86,8 +97,8 @@ export default function Messages() {
                   </Button>
                   <Button
                     size="sm"
-                    onClick={() => {
-                      const room = acceptMessage(msg.id);
+                    onClick={async () => {
+                      const room = await acceptMessage(msg.id);
                       if (room) navigate(`/chat/${room.id}`);
                     }}
                     className="gap-1 text-xs"

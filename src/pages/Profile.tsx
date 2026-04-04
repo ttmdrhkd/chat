@@ -1,4 +1,4 @@
-import { RefreshCw, Save, Plus, X, Camera } from 'lucide-react';
+import { RefreshCw, Save, X, Camera, ShieldOff } from 'lucide-react';
 import { useState, useRef } from 'react';
 import TendencyQuiz from '@/components/TendencyQuiz';
 import { Button } from '@/components/ui/button';
@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import BottomNav from '@/components/BottomNav';
 import { getDeviceId, generateNickname } from '@/lib/nickname';
-import { getDailyMessageInfo } from '@/lib/store';
+import { getDailyMessageInfo } from '@/lib/supabase-store';
 import { getProfile, saveProfile, REGIONS, MBTI_TYPES, TENDENCIES } from '@/lib/profile';
+import { useBlocks } from '@/lib/blocks';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,6 +22,7 @@ export default function Profile() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const msgInfo = getDailyMessageInfo();
+  const { blocks, unblockUser } = useBlocks();
 
   const update = (field: string, value: string) => {
     setProfile(prev => ({ ...prev, [field]: value }));
@@ -74,7 +76,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border">
+      <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border safe-top">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
           <h1 className="text-lg font-bold text-foreground">내 정보</h1>
           <Button size="sm" onClick={handleSave} className="gap-1.5 text-xs">
@@ -124,14 +126,12 @@ export default function Profile() {
             onChange={handlePhotoUpload}
             className="hidden"
           />
-          <p className="text-[10px] text-muted-foreground">* 프로필 사진은 피드에 표시되지 않습니다.</p>
         </div>
 
         {/* Profile fields */}
         <div className="bg-card rounded-xl p-4 border border-border space-y-4">
           <h2 className="text-sm font-semibold text-foreground">프로필 설정</h2>
 
-          {/* Nickname */}
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">닉네임</Label>
             <div className="flex gap-2">
@@ -148,7 +148,6 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Region */}
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">지역</Label>
             <Select value={profile.region} onValueChange={v => update('region', v)}>
@@ -163,7 +162,6 @@ export default function Profile() {
             </Select>
           </div>
 
-          {/* MBTI */}
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">MBTI</Label>
             <Select value={profile.mbti} onValueChange={v => update('mbti', v)}>
@@ -178,7 +176,6 @@ export default function Profile() {
             </Select>
           </div>
 
-          {/* Tendency */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label className="text-xs text-muted-foreground">성향</Label>
@@ -197,10 +194,10 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Display badge choice */}
+        {/* Display badge */}
         <div className="bg-card rounded-xl p-4 border border-border space-y-3">
           <h2 className="text-sm font-semibold text-foreground">피드에 표시할 정보</h2>
-          <p className="text-xs text-muted-foreground"><p className="text-xs text-muted-foreground">게시글/댓글에 아이디 옆에 표시됩니다.</p></p>
+          <p className="text-xs text-muted-foreground">게시글/댓글에 아이디 옆에 표시됩니다.</p>
           <RadioGroup
             value={profile.displayBadge}
             onValueChange={v => update('displayBadge', v)}
@@ -221,7 +218,7 @@ export default function Profile() {
           </RadioGroup>
         </div>
 
-        {/* Stats */}
+        {/* Message stats */}
         <div className="bg-card rounded-xl p-4 border border-border space-y-3">
           <h2 className="text-sm font-semibold text-foreground">오늘의 쪽지</h2>
           <div className="flex items-center justify-between">
@@ -237,6 +234,26 @@ export default function Profile() {
             <span className="text-sm font-medium text-foreground">{msgInfo.watchedAd ? '사용 완료' : '사용 가능'}</span>
           </div>
         </div>
+
+        {/* Blocked users */}
+        {blocks.length > 0 && (
+          <div className="bg-card rounded-xl p-4 border border-border space-y-3">
+            <h2 className="text-sm font-semibold text-foreground">차단 목록</h2>
+            {blocks.map(block => (
+              <div key={block.id} className="flex items-center justify-between py-2">
+                <span className="text-sm text-foreground">{block.blockedDeviceId.slice(0, 8)}...</span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1 text-xs"
+                  onClick={() => unblockUser(block.blockedDeviceId)}
+                >
+                  <ShieldOff className="w-3 h-3" /> 해제
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="bg-card rounded-xl p-4 border border-border">
           <p className="text-xs text-muted-foreground text-center leading-relaxed">

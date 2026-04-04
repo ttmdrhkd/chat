@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useChatRooms } from '@/lib/store';
+import ReportBlockMenu from '@/components/ReportBlockMenu';
+import { useChatRooms } from '@/lib/supabase-store';
 import { getDeviceId, getNickname } from '@/lib/nickname';
 
 export default function ChatRoom() {
@@ -30,7 +31,8 @@ export default function ChatRoom() {
   }
 
   const otherIdx = room.participants[0] === deviceId ? 1 : 0;
-  const otherNick = room.nicknames[otherIdx];
+  const otherNick = room.nicknames[otherIdx] || '알 수 없음';
+  const otherDeviceId = room.participants[otherIdx];
 
   const handleSend = () => {
     if (!text.trim()) return;
@@ -40,7 +42,7 @@ export default function ChatRoom() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border">
+      <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border safe-top">
         <div className="max-w-lg mx-auto flex items-center gap-3 px-4 h-14">
           <button onClick={() => navigate('/chats')} className="text-foreground">
             <ArrowLeft className="w-5 h-5" />
@@ -48,7 +50,12 @@ export default function ChatRoom() {
           <div className="w-8 h-8 rounded-full mint-gradient flex items-center justify-center text-primary-foreground text-xs font-bold">
             {otherNick.charAt(0)}
           </div>
-          <span className="text-sm font-semibold text-foreground">{otherNick}</span>
+          <span className="text-sm font-semibold text-foreground flex-1">{otherNick}</span>
+          <ReportBlockMenu
+            targetDeviceId={otherDeviceId}
+            targetNickname={otherNick}
+            reportType="user"
+          />
         </div>
       </header>
 
@@ -73,7 +80,7 @@ export default function ChatRoom() {
       </main>
 
       <div className="sticky bottom-0 bg-card border-t border-border">
-        <div className="max-w-lg mx-auto flex items-center gap-2 px-4 py-3">
+        <div className="max-w-lg mx-auto flex items-center gap-2 px-4 py-3 safe-bottom">
           <Input
             placeholder="메시지를 입력하세요..."
             value={text}
