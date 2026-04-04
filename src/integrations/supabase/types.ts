@@ -14,7 +14,344 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      blocks: {
+        Row: {
+          blocked_device_id: string
+          blocker_device_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked_device_id: string
+          blocker_device_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked_device_id?: string
+          blocker_device_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          device_id: string
+          id: string
+          nickname: string
+          room_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          device_id: string
+          id?: string
+          nickname: string
+          room_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          device_id?: string
+          id?: string
+          nickname?: string
+          room_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "chat_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_rooms: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string | null
+          nicknames: string[]
+          participants: string[]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          nicknames: string[]
+          participants: string[]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          nicknames?: string[]
+          participants?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_rooms_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comments: {
+        Row: {
+          content: string
+          created_at: string
+          device_id: string
+          id: string
+          nickname: string
+          post_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          device_id: string
+          id?: string
+          nickname: string
+          post_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          device_id?: string
+          id?: string
+          nickname?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          from_device_id: string
+          from_nickname: string
+          id: string
+          post_id: string
+          status: string
+          to_device_id: string
+          to_nickname: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          from_device_id: string
+          from_nickname: string
+          id?: string
+          post_id: string
+          status?: string
+          to_device_id: string
+          to_nickname: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          from_device_id?: string
+          from_nickname?: string
+          id?: string
+          post_id?: string
+          status?: string
+          to_device_id?: string
+          to_nickname?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          device_id: string
+          id: string
+          read: boolean
+          related_id: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          device_id: string
+          id?: string
+          read?: boolean
+          related_id?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          device_id?: string
+          id?: string
+          read?: boolean
+          related_id?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      posts: {
+        Row: {
+          content: string
+          created_at: string
+          device_id: string
+          id: string
+          image_url: string | null
+          nickname: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          device_id: string
+          id?: string
+          image_url?: string | null
+          nickname: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          device_id?: string
+          id?: string
+          image_url?: string | null
+          nickname?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          device_id: string
+          id: string
+          nickname: string
+          tendency: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_id: string
+          id?: string
+          nickname: string
+          tendency?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_id?: string
+          id?: string
+          nickname?: string
+          tendency?: string | null
+        }
+        Relationships: []
+      }
+      reel_comments: {
+        Row: {
+          content: string
+          created_at: string
+          device_id: string
+          id: string
+          nickname: string
+          reel_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          device_id: string
+          id?: string
+          nickname: string
+          reel_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          device_id?: string
+          id?: string
+          nickname?: string
+          reel_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reel_comments_reel_id_fkey"
+            columns: ["reel_id"]
+            isOneToOne: false
+            referencedRelation: "reels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reels: {
+        Row: {
+          content: string
+          created_at: string
+          device_id: string
+          expires_at: string
+          id: string
+          image_url: string | null
+          nickname: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          device_id: string
+          expires_at: string
+          id?: string
+          image_url?: string | null
+          nickname: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          device_id?: string
+          expires_at?: string
+          id?: string
+          image_url?: string | null
+          nickname?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          related_id: string | null
+          report_type: string
+          reported_device_id: string
+          reporter_device_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason: string
+          related_id?: string | null
+          report_type: string
+          reported_device_id: string
+          reporter_device_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          related_id?: string | null
+          report_type?: string
+          reported_device_id?: string
+          reporter_device_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
