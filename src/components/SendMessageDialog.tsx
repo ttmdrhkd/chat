@@ -3,7 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { getDailyMessageInfo, markAdWatched } from '@/lib/supabase-store';
-import { AlertCircle, Play } from 'lucide-react';
+import { AlertCircle, Play, Loader2 } from 'lucide-react';
+import { showRewardAd, isNativePlatform } from '@/lib/admob';
 
 interface SendMessageDialogProps {
   open: boolean;
@@ -15,6 +16,7 @@ interface SendMessageDialogProps {
 export default function SendMessageDialog({ open, onClose, onSubmit, toNickname }: SendMessageDialogProps) {
   const [content, setContent] = useState('');
   const [showAdPrompt, setShowAdPrompt] = useState(false);
+  const [adLoading, setAdLoading] = useState(false);
   const info = getDailyMessageInfo();
 
   const handleSubmit = () => {
@@ -32,11 +34,26 @@ export default function SendMessageDialog({ open, onClose, onSubmit, toNickname 
     onClose();
   };
 
-  const handleWatchAd = () => {
-    setTimeout(() => {
-      markAdWatched();
-      setShowAdPrompt(false);
-    }, 2000);
+  const handleWatchAd = async () => {
+    setAdLoading(true);
+    try {
+      if (isNativePlatform()) {
+        const rewarded = await showRewardAd();
+        if (rewarded) {
+          markAdWatched();
+          setShowAdPrompt(false);
+        }
+      } else {
+        // 웹 환경: 시뮬레이션 (테스트용)
+        await new Promise(res => setTimeout(res, 2000));
+        markAdWatched();
+        setShowAdPrompt(false);
+      }
+    } catch (e) {
+      console.error('광고 시청 실패:', e);
+    } finally {
+      setAdLoading(false);
+    }
   };
 
   if (showAdPrompt) {
@@ -49,8 +66,12 @@ export default function SendMessageDialog({ open, onClose, onSubmit, toNickname 
           </DialogHeader>
           <div className="py-6 space-y-4">
             <p className="text-sm text-muted-foreground">광고를 시청하면 쪽지를 1회 더 보낼 수 있습니다.</p>
-            <Button onClick={handleWatchAd} className="gap-2">
-              <Play className="w-4 h-4" /> 광고 보기
+            <Button onClick={handleWatchAd} disabled={adLoading} className="gap-2">
+              {adLoading ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> 광고 로딩 중...</>
+              ) : (
+                <><Play className="w-4 h-4" /> 광고 보기</>
+              )}
             </Button>
           </div>
         </DialogContent>
