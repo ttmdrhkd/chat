@@ -26,22 +26,20 @@ export async function showRewardAd(): Promise<boolean> {
     };
 
     return new Promise<boolean>(async (resolve) => {
-      // 리워드 수령 이벤트 리스너
-      const rewardListener = AdMob.addListener(
+      const rewardHandle = await AdMob.addListener(
         RewardAdPluginEvents.Rewarded,
         () => {
-          rewardListener.remove();
-          dismissListener.remove();
+          rewardHandle.remove();
+          dismissHandle.remove();
           resolve(true);
         }
       );
 
-      // 광고 닫힘 이벤트 (리워드 없이)
-      const dismissListener = AdMob.addListener(
+      const dismissHandle = await AdMob.addListener(
         RewardAdPluginEvents.Dismissed,
         () => {
-          rewardListener.remove();
-          dismissListener.remove();
+          rewardHandle.remove();
+          dismissHandle.remove();
           resolve(false);
         }
       );
@@ -50,8 +48,8 @@ export async function showRewardAd(): Promise<boolean> {
         await AdMob.prepareRewardVideoAd(options);
         await AdMob.showRewardVideoAd();
       } catch (e) {
-        rewardListener.remove();
-        dismissListener.remove();
+        rewardHandle.remove();
+        dismissHandle.remove();
         console.error('리워드 광고 표시 실패:', e);
         resolve(false);
       }
