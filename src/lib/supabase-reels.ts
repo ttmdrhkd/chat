@@ -78,8 +78,9 @@ export function useReels() {
   useEffect(() => {
     fetchReels();
 
+    const channelName = `reels-realtime-${Date.now()}`;
     const channel = supabase
-      .channel('reels-realtime')
+      .channel(channelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reels' }, () => fetchReels())
       .subscribe();
 

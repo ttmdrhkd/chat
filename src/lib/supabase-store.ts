@@ -154,8 +154,9 @@ export function usePosts() {
   useEffect(() => {
     fetchPosts();
 
+    const channelName = `posts-realtime-${Date.now()}`;
     const channel = supabase
-      .channel('posts-realtime')
+      .channel(channelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => fetchPosts())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, () => fetchPosts())
       .subscribe();
@@ -231,8 +232,9 @@ export function useMessages() {
 
   useEffect(() => {
     fetchMessages();
+    const channelName = `messages-realtime-${Date.now()}`;
     const channel = supabase
-      .channel('messages-realtime')
+      .channel(channelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => fetchMessages())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -346,8 +348,9 @@ export function useChatRooms() {
 
   useEffect(() => {
     fetchRooms();
+    const channelName = `chatrooms-realtime-${Date.now()}`;
     const channel = supabase
-      .channel('chatrooms-realtime')
+      .channel(channelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_rooms' }, () => fetchRooms())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_messages' }, () => fetchRooms())
       .subscribe();
@@ -400,8 +403,9 @@ export function useNotifications() {
 
   useEffect(() => {
     fetchNotifications();
+    const channelName = `notifications-realtime-${Date.now()}`;
     const channel = supabase
-      .channel('notifications-realtime')
+      .channel(channelName)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, () => fetchNotifications())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
