@@ -78,11 +78,9 @@ export function useReels() {
   useEffect(() => {
     fetchReels();
 
-    const channelName = `reels-realtime-${Date.now()}`;
-    const channel = supabase
-      .channel(channelName)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'reels' }, () => fetchReels())
-      .subscribe();
+    const channel = supabase.channel(`reels-realtime-${crypto.randomUUID()}`);
+    channel.on('postgres_changes', { event: '*', schema: 'public', table: 'reels' }, () => fetchReels());
+    channel.subscribe();
 
     const interval = setInterval(fetchReels, 30000);
 
