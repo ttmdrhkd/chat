@@ -1,4 +1,4 @@
-import { RefreshCw, Save, X, Camera, ShieldOff } from 'lucide-react';
+import { RefreshCw, Save, X, Camera, ShieldOff, Moon, Sun } from 'lucide-react';
 import { useState, useRef } from 'react';
 import TendencyQuiz from '@/components/TendencyQuiz';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { getDeviceId, generateNickname } from '@/lib/nickname';
 import { getDailyMessageInfo } from '@/lib/supabase-store';
 import { getProfile, saveProfile, REGIONS, MBTI_TYPES, TENDENCIES } from '@/lib/profile';
 import { useBlocks } from '@/lib/blocks';
+import { useTheme } from '@/lib/theme';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +24,7 @@ export default function Profile() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const msgInfo = getDailyMessageInfo();
   const { blocks, unblockUser } = useBlocks();
+  const { theme, toggleTheme } = useTheme();
 
   const update = (field: string, value: string) => {
     setProfile(prev => ({ ...prev, [field]: value }));
@@ -79,10 +81,15 @@ export default function Profile() {
       <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border safe-top">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
           <h1 className="text-lg font-bold text-foreground">내 정보</h1>
-          <Button size="sm" onClick={handleSave} className="gap-1.5 text-xs">
-            <Save className="w-3.5 h-3.5" />
-            저장
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="icon" variant="ghost" onClick={toggleTheme} title="테마 전환">
+              {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            </Button>
+            <Button size="sm" onClick={handleSave} className="gap-1.5 text-xs">
+              <Save className="w-3.5 h-3.5" />
+              저장
+            </Button>
+          </div>
         </div>
       </header>
 

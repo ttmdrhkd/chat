@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,20 +7,62 @@ import PostCard from '@/components/PostCard';
 import WritePostDialog from '@/components/WritePostDialog';
 import SendMessageDialog from '@/components/SendMessageDialog';
 import { usePosts, useMessages } from '@/lib/supabase-store';
+import { useLikes } from '@/lib/supabase-likes';
 import { getDeviceId, getNickname } from '@/lib/nickname';
 import { getProfileBadge } from '@/lib/profile';
 import ReelsBar from '@/components/ReelsBar';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+
+const PAGE_SIZE = 20;
 
 export default function Index() {
   const navigate = useNavigate();
   const deviceId = getDeviceId();
   const nickname = getNickname();
-  const { posts, addPost } = usePosts();
+  const { posts, addPost, refresh: refreshPosts } = usePosts();
   const { sendMessage } = useMessages();
+  const { getLikeInfo, toggleLike } = useLikes();
   const [showWrite, setShowWrite] = useState(false);
   const [messageTarget, setMessageTarget] = useState<{ deviceId: string; nickname: string; postId: string } | null>(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const loaderRef = useRef<HTMLDivElement>(null);
 
   const badge = getProfileBadge();
+
+  const visiblePosts = posts.slice(0, visibleCount);
+  const hasMore = visibleCount < posts.length;
+
+  // Infinite scroll observer
+  useEffect(() => {
+    if (!loaderRef.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          setVisibleCount(prev => prev + PAGE_SIZE);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(loaderRef.current);
+    return () => observer.disconnect();
+  }, [hasMore]);
+
+  // Reset visible count when posts change significantly
+  useEffect(() => {
+    setVisibleCount(prev => Math.max(prev, PAGE_SIZE));
+  }, [posts.length]);
+
+  const handleDelete = async (postId: string) => {
+    if (!confirm('정말 삭제하시겠습니까?')) return;
+    const { error } = await supabase.from('posts').delete().eq('id', postId);
+    if (error) {
+      toast({ title: '삭제 실패', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: '삭제되었습니다' });
+      refreshPosts();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -45,16 +87,24 @@ export default function Index() {
             <p className="text-muted-foreground text-xs mt-1">첫 번째 글을 작성해보세요!</p>
           </div>
         )}
-        {posts.map(post => (
+        {visiblePosts.map(post => (
           <PostCard
             key={post.id}
             post={post}
             isMine={post.deviceId === deviceId}
             onClick={() => navigate(`/post/${post.id}`)}
             onMessage={() => setMessageTarget({ deviceId: post.deviceId, nickname: post.nickname, postId: post.id })}
+            onDelete={() => handleDelete(post.id)}
             badge={post.deviceId === deviceId ? badge : null}
+            likeInfo={getLikeInfo(post.id)}
+            onToggleLike={() => toggleLike(post.id)}
           />
         ))}
+        {hasMore && (
+          <div ref={loaderRef} className="flex justify-center py-4">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
       </main>
 
       <WritePostDialog
