@@ -137,6 +137,35 @@ export type Database = {
           },
         ]
       }
+      likes: {
+        Row: {
+          created_at: string
+          device_id: string
+          id: string
+          post_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_id: string
+          id?: string
+          post_id: string
+        }
+        Update: {
+          created_at?: string
+          device_id?: string
+          id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
