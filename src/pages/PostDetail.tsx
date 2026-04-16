@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft, Send, Trash2, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -8,8 +8,11 @@ import BottomNav from '@/components/BottomNav';
 import SendMessageDialog from '@/components/SendMessageDialog';
 import ReportBlockMenu from '@/components/ReportBlockMenu';
 import { usePosts, useMessages } from '@/lib/supabase-store';
+import { useLikes } from '@/lib/supabase-likes';
 import { getDeviceId, getNickname } from '@/lib/nickname';
 import { getProfileBadge } from '@/lib/profile';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
@@ -18,8 +21,9 @@ export default function PostDetail() {
   const navigate = useNavigate();
   const deviceId = getDeviceId();
   const nickname = getNickname();
-  const { getPost, addComment } = usePosts();
+  const { getPost, addComment, refresh: refreshPosts } = usePosts();
   const { sendMessage } = useMessages();
+  const { getLikeInfo, toggleLike } = useLikes();
   const [commentText, setCommentText] = useState('');
   const [messageTarget, setMessageTarget] = useState<{ deviceId: string; nickname: string; postId: string } | null>(null);
   const post = getPost(id || '');
@@ -33,10 +37,34 @@ export default function PostDetail() {
     );
   }
 
+  const likeInfo = getLikeInfo(post.id);
+
   const handleComment = () => {
     if (!commentText.trim()) return;
     addComment(post.id, { deviceId, nickname, content: commentText.trim() });
     setCommentText('');
+  };
+
+  const handleDeletePost = async () => {
+    if (!confirm('정말 삭제하시겠습니까?')) return;
+    const { error } = await supabase.from('posts').delete().eq('id', post.id);
+    if (error) {
+      toast({ title: '삭제 실패', variant: 'destructive' });
+    } else {
+      toast({ title: '삭제되었습니다' });
+      navigate('/');
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm('댓글을 삭제하시겠습니까?')) return;
+    const { error } = await supabase.from('comments').delete().eq('id', commentId);
+    if (error) {
+      toast({ title: '삭제 실패', variant: 'destructive' });
+    } else {
+      toast({ title: '댓글이 삭제되었습니다' });
+      refreshPosts();
+    }
   };
 
   const openMessage = (targetDeviceId: string, targetNickname: string) => {
@@ -52,6 +80,11 @@ export default function PostDetail() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-lg font-bold text-foreground flex-1">게시글</h1>
+          {post.deviceId === deviceId && (
+            <button onClick={handleDeletePost} className="p-2 text-muted-foreground hover:text-destructive transition-colors">
+              <Trash2 className="w-5 h-5" />
+            </button>
+          )}
           {post.deviceId !== deviceId && (
             <ReportBlockMenu
               targetDeviceId={post.deviceId}
@@ -98,6 +131,16 @@ export default function PostDetail() {
               <img src={post.imageUrl} alt="첨부 이미지" className="w-full object-cover" />
             </div>
           )}
+          {/* Like button */}
+          <div className="mt-3 flex items-center gap-4">
+            <button
+              onClick={() => toggleLike(post.id)}
+              className={`flex items-center gap-1 transition-colors ${likeInfo.liked ? 'text-destructive' : 'text-muted-foreground hover:text-destructive'}`}
+            >
+              <Heart className={`w-5 h-5 ${likeInfo.liked ? 'fill-current' : ''}`} />
+              <span className="text-sm">{likeInfo.count}</span>
+            </button>
+          </div>
         </div>
 
         {/* Comments */}
@@ -114,6 +157,15 @@ export default function PostDetail() {
                   {formatDistanceToNow(c.createdAt, { addSuffix: true, locale: ko })}
                 </span>
                 <div className="flex-1" />
+                {c.deviceId === deviceId && (
+                  <button
+                    onClick={() => handleDeleteComment(c.id)}
+                    className="p-1 rounded text-muted-foreground hover:text-destructive transition-colors"
+                    title="삭제"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
                 {c.deviceId !== deviceId && (
                   <div className="flex items-center gap-1">
                     <button

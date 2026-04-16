@@ -1,20 +1,24 @@
-import { MessageSquare, Send } from 'lucide-react';
+import { MessageSquare, Send, Heart, Trash2 } from 'lucide-react';
 import type { Post } from '@/lib/supabase-store';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import ReportBlockMenu from '@/components/ReportBlockMenu';
 import { getDeviceId } from '@/lib/nickname';
+import type { LikeInfo } from '@/lib/supabase-likes';
 
 interface PostCardProps {
   post: Post;
   onClick?: () => void;
   onMessage?: () => void;
+  onDelete?: () => void;
   isMine?: boolean;
   badge?: { label: string; value: string } | null;
+  likeInfo?: LikeInfo;
+  onToggleLike?: () => void;
 }
 
-export default function PostCard({ post, onClick, onMessage, isMine, badge }: PostCardProps) {
+export default function PostCard({ post, onClick, onMessage, onDelete, isMine, badge, likeInfo, onToggleLike }: PostCardProps) {
   const deviceId = getDeviceId();
 
   return (
@@ -40,6 +44,15 @@ export default function PostCard({ post, onClick, onMessage, isMine, badge }: Po
           </p>
         </div>
         <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          {isMine && onDelete && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              className="p-2 rounded-lg text-muted-foreground hover:text-destructive transition-colors"
+              title="삭제"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
           {!isMine && onMessage && (
             <button
               onClick={(e) => { e.stopPropagation(); onMessage(); }}
@@ -68,9 +81,20 @@ export default function PostCard({ post, onClick, onMessage, isMine, badge }: Po
         </div>
       )}
 
-      <div className="flex items-center gap-1 text-muted-foreground">
-        <MessageSquare className="w-4 h-4" />
-        <span className="text-xs">{post.comments.length}</span>
+      <div className="flex items-center gap-4 text-muted-foreground">
+        {onToggleLike && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleLike(); }}
+            className={`flex items-center gap-1 transition-colors ${likeInfo?.liked ? 'text-destructive' : 'hover:text-destructive'}`}
+          >
+            <Heart className={`w-4 h-4 ${likeInfo?.liked ? 'fill-current' : ''}`} />
+            <span className="text-xs">{likeInfo?.count || 0}</span>
+          </button>
+        )}
+        <div className="flex items-center gap-1">
+          <MessageSquare className="w-4 h-4" />
+          <span className="text-xs">{post.comments.length}</span>
+        </div>
       </div>
     </article>
   );

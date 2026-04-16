@@ -2,7 +2,8 @@ import { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ImagePlus, X } from 'lucide-react';
+import { ImagePlus, X, Loader2 } from 'lucide-react';
+import { uploadPostImage } from '@/lib/image-upload';
 
 interface WritePostDialogProps {
   open: boolean;
@@ -13,24 +14,45 @@ interface WritePostDialogProps {
 
 export default function WritePostDialog({ open, onClose, onSubmit, nickname }: WritePostDialogProps) {
   const [content, setContent] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>();
+  const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setImageFile(file);
       const reader = new FileReader();
       reader.onload = () => setImagePreview(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!content.trim()) return;
-    onSubmit(content.trim(), imagePreview);
-    setContent('');
+    setUploading(true);
+    try {
+      let imageUrl: string | undefined;
+      if (imageFile) {
+        imageUrl = await uploadPostImage(imageFile);
+      }
+      onSubmit(content.trim(), imageUrl);
+      setContent('');
+      setImageFile(null);
+      setImagePreview(undefined);
+      onClose();
+    } catch (err) {
+      console.error('Upload failed:', err);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const clearImage = () => {
+    setImageFile(null);
     setImagePreview(undefined);
-    onClose();
+    if (fileRef.current) fileRef.current.value = '';
   };
 
   return (
@@ -57,7 +79,7 @@ export default function WritePostDialog({ open, onClose, onSubmit, nickname }: W
             <div className="relative">
               <img src={imagePreview} alt="미리보기" className="rounded-lg max-h-48 object-cover w-full" />
               <button
-                onClick={() => setImagePreview(undefined)}
+                onClick={clearImage}
                 className="absolute top-2 right-2 w-6 h-6 rounded-full bg-foreground/60 text-background flex items-center justify-center"
               >
                 <X className="w-3 h-3" />
@@ -72,8 +94,8 @@ export default function WritePostDialog({ open, onClose, onSubmit, nickname }: W
               <ImagePlus className="w-5 h-5" />
             </button>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImage} />
-            <Button onClick={handleSubmit} disabled={!content.trim()}>
-              게시하기
+            <Button onClick={handleSubmit} disabled={!content.trim() || uploading}>
+              {uploading ? <><Loader2 className="w-4 h-4 animate-spin mr-1" /> 업로드 중...</> : '게시하기'}
             </Button>
           </div>
         </div>
