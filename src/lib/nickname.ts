@@ -1,3 +1,5 @@
+import { getCachedUserId } from '@/lib/auth';
+
 const adjectives = [
   '행복한', '지혜로운', '용감한', '귀여운', '씩씩한', '따뜻한', '빛나는', '졸린',
   '신비한', '활발한', '조용한', '재빠른', '느긋한', '장난꾸러기', '수줍은', '당당한',
@@ -16,16 +18,18 @@ export function generateNickname(): string {
   return `${adj} ${animal}`;
 }
 
-const DEVICE_ID_KEY = 'anon_device_id';
 const NICKNAME_KEY = 'anon_nickname';
 
+/**
+ * Returns the authenticated user's ID (auth.uid()).
+ * Must be called after AuthGate has initialized auth.
+ */
 export function getDeviceId(): string {
-  let id = localStorage.getItem(DEVICE_ID_KEY);
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem(DEVICE_ID_KEY, id);
+  const userId = getCachedUserId();
+  if (!userId) {
+    throw new Error('Auth not initialized. Ensure AuthGate wraps the app.');
   }
-  return id;
+  return userId;
 }
 
 export function getNickname(): string {
