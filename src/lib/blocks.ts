@@ -59,11 +59,12 @@ export async function reportUser(report: {
   relatedId?: string;
   reason: string;
 }) {
-  await supabase.from('reports').insert({
+  const { error } = await supabase.from('reports').insert({
     reporter_device_id: report.reporterDeviceId,
     reported_device_id: report.reportedDeviceId,
     report_type: report.reportType,
     related_id: report.relatedId || null,
     reason: report.reason,
   });
+  if (error) throw error;
 }
