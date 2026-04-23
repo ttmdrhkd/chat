@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      bans: {
+        Row: {
+          banned_until: string
+          created_at: string
+          device_id: string
+          id: string
+          reason: string
+        }
+        Insert: {
+          banned_until: string
+          created_at?: string
+          device_id: string
+          id?: string
+          reason?: string
+        }
+        Update: {
+          banned_until?: string
+          created_at?: string
+          device_id?: string
+          id?: string
+          reason?: string
+        }
+        Relationships: []
+      }
       blocks: {
         Row: {
           blocked_device_id: string
