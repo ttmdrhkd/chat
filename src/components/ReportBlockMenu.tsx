@@ -18,6 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useBlocks, reportUser } from '@/lib/blocks';
+import { fetchBan } from '@/lib/bans';
 import { getDeviceId } from '@/lib/nickname';
 import { toast } from 'sonner';
 
@@ -52,14 +53,31 @@ export default function ReportBlockMenu({ targetDeviceId, targetNickname, report
       toast.error('신고 사유를 선택해주세요.');
       return;
     }
-    await reportUser({
-      reporterDeviceId: myDeviceId,
-      reportedDeviceId: targetDeviceId,
-      reportType,
-      relatedId,
-      reason: detail ? `${reason}: ${detail}` : reason,
-    });
-    toast.success('신고가 접수되었습니다.');
+    try {
+      await reportUser({
+        reporterDeviceId: myDeviceId,
+        reportedDeviceId: targetDeviceId,
+        reportType,
+        relatedId,
+        reason: detail ? `${reason}: ${detail}` : reason,
+      });
+    } catch (err: any) {
+      // Unique constraint violation = already reported this target
+      if (err?.code === '23505') {
+        toast.error('이미 신고한 대상입니다.');
+        setShowReport(false);
+        return;
+      }
+      toast.error('신고 처리에 실패했습니다.');
+      return;
+    }
+    // Check if the target just got auto-banned
+    const ban = await fetchBan(targetDeviceId);
+    if (ban.banned) {
+      toast.success(`신고 누적으로 ${targetNickname}님이 3일간 정지되었습니다.`);
+    } else {
+      toast.success('신고가 접수되었습니다.');
+    }
     setShowReport(false);
     setReason('');
     setDetail('');
